@@ -10,7 +10,7 @@ import random
 # Получение куков из ЕФРСБ
 cookie = get_cookies_by_requests()
 
-list_of_num = ["15127894", "15136541"]
+list_of_num = ["15136541"]
 
 # Создание данных с номером сообщения о проведении торгов
 for i in list_of_num:
@@ -54,6 +54,7 @@ for i in list_of_num:
 
             # Извлекаем лоты на основе структурированных данных
             lot_items = div.find_all(text=re.compile(r"Лот\s*№\s*\d+"))  # Ищем текст, содержащий "Лот №"
+            # lot_items = div.find_all(text=re.compile(r"Лот\+"))  # Ищем текст, содержащий "Лот №"
             for item in lot_items:
                 # Ищем ближайший элемент (например, <br>), чтобы получить название и цену
                 lot_number_match = re.search(r"Лот\s*№\s*(\d+)", item)
