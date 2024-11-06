@@ -10,7 +10,7 @@ import random
 # Получение куков из ЕФРСБ
 cookie = get_cookies_by_requests()
 
-list_of_num = ["15136541"]
+list_of_num = ["15921634"]
 
 # Создание данных с номером сообщения о проведении торгов
 for i in list_of_num:
@@ -22,7 +22,8 @@ for i in list_of_num:
     # print("HTML Content:", html_content)
 
     soup = BeautifulSoup(html_content, "html.parser")
-
+    # print(soup)
+    
     # Инициализация пустого словаря для сохранения данных
     data = {}
 
@@ -46,35 +47,23 @@ for i in list_of_num:
             for idx, cell in enumerate(cells):
                 lot_data[headers[idx]] = cell.get_text(strip=True)
             lot_info.append(lot_data)
+            #print("Lot data:", lot_data)  # Добавили отладочный вывод
     else:
-        # Обработка текста в div class="msg" для поиска лотов
-        for div in soup.find_all("div", class_="msg"):
-            text_content = div.get_text(" ", strip=True)
-            # print("Text Content:", text_content)  # Для отладки
+        # Попытка извлечения данных из текстового списка лотов
+        lots_dict = {}
+        lot_lines = re.split(r'\s*\d+\.\s*', soup.get_text())
+        lot_lines = [line.strip() for line in lot_lines if line.strip()]
 
-            # Извлекаем лоты на основе структурированных данных
-            lot_items = div.find_all(text=re.compile(r"Лот\s*№\s*\d+"))  # Ищем текст, содержащий "Лот №"
-            # lot_items = div.find_all(text=re.compile(r"Лот\+"))  # Ищем текст, содержащий "Лот №"
-            for item in lot_items:
-                # Ищем ближайший элемент (например, <br>), чтобы получить название и цену
-                lot_number_match = re.search(r"Лот\s*№\s*(\d+)", item)
-                if lot_number_match:
-                    lot_number = lot_number_match.group(1)
-                    lot_details = item.split("–")  # Предполагаем, что цена идет после "–"
-                    if len(lot_details) > 1:
-                        lot_name = lot_details[0].strip()
-                        lot_price_match = re.search(r"(\d[\d\s]*)", lot_details[1])
-                        lot_price = lot_price_match.group(0).replace(" ", "") if lot_price_match else None
-                        if lot_price:
-                            lot_info.append({
-                                "Номер лота": lot_number,
-                                "Наименование": lot_name,
-                                "Начальная цена": int(lot_price)
-                            })
-
-    # Добавляем информацию о лотах в data["Лоты"]
-    data["Лоты"] = lot_info
-
+        for line in lot_lines:
+            # Используем регулярное выражение для извлечения количества и цены
+            match = re.search(r'(.+?)\s(\d+ шт\.)\s([\d\s,]+ руб\.)', line)
+            if match:
+                name = match.group(1).strip()
+                quantity = match.group(2).strip()
+                price = match.group(3).strip()
+                lot_number = f"Лот {len(lots_dict) + 1}"
+                lots_dict[lot_number] = {"Описание": name, "Количество": quantity, "Начальная цена продажи": price}
+    
     # Извлечение email, если он присутствует
     email = data.get("E-mail")
     if not email:
@@ -84,9 +73,13 @@ for i in list_of_num:
             data["E-mail"] = email
         else:
             email = "Не найден"
-
-    # Выводим email и лоты
-    print(email, data["Лоты"])
-
-    # Пауза между запросами
+    
+    # Исключаем блокирующие запросы
     time.sleep(random.uniform(1, 3))
+
+# Вывод данных о лотах
+if lot_info:
+    print("Данные лотов из таблицы:", lot_info)
+else:
+    print("Данные лотов из текста:", lots_dict)
+print(data["E-mail"])
