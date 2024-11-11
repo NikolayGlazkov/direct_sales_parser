@@ -77,32 +77,3 @@ def get_oll_mssege_page(cookie, data_raw, session=None, retries=3):
     # Возвращаем None, если все попытки не удались
     print("Все попытки запроса исчерпаны. Проверьте соединение и куки.")
     return None
-
-# # Основной цикл для получения страниц
-# def main():
-#     cookie = get_cookies_by_requests()
-    
-#     if not cookie:
-#         print("Не удалось получить куки. Проверьте соединение.")
-#         return
-    
-#     # Пример данных
-#     list_of_num = ["15901584", "15127894", "15136541"]
-    
-#     session = requests.Session()  # Создаем сессию для сохранения куки
-    
-#     for num in list_of_num:
-#         data_raw = made_raw_data_for_massage_number(num)
-#         page_content = get_oll_mssege_page(cookie, data_raw, session=session)
-        
-#         if page_content:
-#             print(f"Контент для {num} получен.")
-#             # Дополнительная обработка страницы...
-#         else:
-#             print(f"Не удалось получить контент для {num}.")
-        
-#         # Пауза между запросами
-#         time.sleep(random.uniform(1, 3))  # Случайная пауза для уменьшения риска бана
-
-# if __name__ == "__main__":
-#     main()

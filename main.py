@@ -10,7 +10,8 @@ import random
 # Получение куков из ЕФРСБ
 cookie = get_cookies_by_requests()
 
-list_of_num = ["15921634"]
+list_of_num = ["15629568"]
+lot_num = "1"
 
 # Создание данных с номером сообщения о проведении торгов
 for i in list_of_num:
@@ -18,12 +19,9 @@ for i in list_of_num:
     response = requests.post(made_message_link(get_oll_mssege_page(cookie=cookie, data_raw=data_raw)))
     html_content = response.text
 
-    # Выводим html_content для отладки
-    # print("HTML Content:", html_content)
-
     soup = BeautifulSoup(html_content, "html.parser")
-    # print(soup)
     
+
     # Инициализация пустого словаря для сохранения данных
     data = {}
 
@@ -36,50 +34,62 @@ for i in list_of_num:
                 value = cells[1].get_text(strip=True)
                 data[key] = value
 
-    # Извлечение данных из таблицы с лотом
-    lot_info = []
+    # Инициализация словаря для лотовa
+    lots_dict = {}
     lot_table = soup.find("table", class_="lotInfo")
+
+    # Обработка лотов в табличном формате
     if lot_table:
-        headers = [th.get_text(strip=True) for th in lot_table.find_all("th")]
-        for row in lot_table.find_all("tr")[1:]:
-            lot_data = {}
+        for row in lot_table.find_all("tr")[1:]:  # Пропускаем заголовок
             cells = row.find_all("td")
-            for idx, cell in enumerate(cells):
-                lot_data[headers[idx]] = cell.get_text(strip=True)
-            lot_info.append(lot_data)
-            #print("Lot data:", lot_data)  # Добавили отладочный вывод
+            if len(cells) >= 2:  # Проверка на наличие хотя бы номера и описания
+                lot_number = cells[0].get_text(strip=True)
+                description = cells[1].get_text(strip=True)
+                # Добавляем лот в словарь
+                lots_dict[lot_number] = description
+
+    # Если таблица с лотами отсутствует, обрабатываем текст
     else:
-        # Попытка извлечения данных из текстового списка лотов
-        lots_dict = {}
         lot_lines = re.split(r'\s*\d+\.\s*', soup.get_text())
         lot_lines = [line.strip() for line in lot_lines if line.strip()]
 
-        for line in lot_lines:
-            # Используем регулярное выражение для извлечения количества и цены
+        for index, line in enumerate(lot_lines, start=1):
             match = re.search(r'(.+?)\s(\d+ шт\.)\s([\d\s,]+ руб\.)', line)
             if match:
-                name = match.group(1).strip()
-                quantity = match.group(2).strip()
-                price = match.group(3).strip()
-                lot_number = f"Лот {len(lots_dict) + 1}"
-                lots_dict[lot_number] = {"Описание": name, "Количество": quantity, "Начальная цена продажи": price}
-    
+                description = match.group(1).strip()
+                lot_number = str(index)
+                lots_dict[lot_number] = description
+
     # Извлечение email, если он присутствует
     email = data.get("E-mail")
-    if not email:
-        emails = re.findall(r"[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}", html_content)
-        if emails:
-            email = emails[0]
-            data["E-mail"] = email
-        else:
-            email = "Не найден"
-    
-    # Исключаем блокирующие запросы
-    time.sleep(random.uniform(1, 3))
 
-# Вывод данных о лотах
-if lot_info:
-    print("Данные лотов из таблицы:", lot_info)
-else:
-    print("Данные лотов из текста:", lots_dict)
-print(data["E-mail"])
+    if not email:
+        # Ищем все email-адреса в html_content и сохраняем их в список
+        emails = re.findall(r"[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}", html_content)
+        
+        if emails:
+            # Если email-адреса найдены, сохраняем их список в data
+            data["E-mail"] = emails
+        else:
+            # Если email-адреса не найдены, сохраняем сообщение "Не найден"
+            data["E-mail"] = ["Не найден"]
+    else:
+        # Если email уже есть в data, делаем его списком для единообразия
+        data["E-mail"] = [email]
+
+# print(data)
+
+email_text = f"""Здравствуйте уважаемый(ая) {(str(data.get('Арбитражный управляющий')).split("(")[0].rstrip() if data.get('Арбитражный управляющий') else data.get('Организатор торгов'))}, прошу вас предоставить мне информацию по лотам опубликованном на сайте ЕФРСБ № сообщения: {data.get("№ сообщения")}
+должника: {(data.get("Наименование должника") if data.get("Наименование должника") else data.get("ФИО должника"))}
+ИНН: {data.get("ИНН")}
+А именно:
+ 
+Лот№ {lot_num} : {lots_dict.get(lot_num, 'Информация о лоте отсутствует')}
+
+У вас есть фото имущества? где, и по каким дням проходит осмотр? 
+Можете так же предоставить все имеющиеся документы по этому лоту?
+
+С уважением Глазков Николай +79377419582"""
+
+
+print(email_text,"\n",*data["E-mail"])
