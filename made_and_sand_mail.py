@@ -24,8 +24,9 @@ def generate_email_text(data, lot_nums):
 
 {lots_text}
 
-У вас есть фото имущества? Где и по каким дням проходит осмотр?
+У вас есть фото имущества? Где и по каким дням проходит осмотр?, контактные номера.
 Можете также предоставить все имеющиеся документы по этим лотам?
+Сканы документов о регистрации.
 
 С уважением Глазков Николай Александрович 89377419582
 """
@@ -34,8 +35,7 @@ def generate_email_text(data, lot_nums):
 
 def send_email(message, obligor_name, recipient):
     sender = "gn9377419582@gmail.com"
-    # password = os.getenv("PASSWORD")
-    password = 'sdpz afcb orzf yzcp'
+    password = os.getenv("PASSWORD")
     server = smtplib.SMTP("smtp.gmail.com", 587)
     server.starttls()
 
@@ -59,8 +59,8 @@ def main(list_of_num,lot_nums):
     obligor_name = data.get("Наименование должника") or data.get("ФИО должника")
     
     # Извлекаем email получателя
-    recipient_email = ",".join(data.get("E-mail"))
-    # recipient_email = "vanohaker@yandex.ru"
+    # recipient_email = ",".join(data.get("E-mail"))
+    recipient_email = "vanohaker@yandex.ru"
     email_text = generate_email_text(data, lot_nums)
 
     # Отправляем email
