@@ -99,8 +99,7 @@ def main(list_of_num,lot_nums):
         print("Email address not found in data")
 
 if __name__ == "__main__":
-    main(["15702457"],sorted(['9']))
-
+    main(["16078612"],sorted(['1']))
 # data = combain_info.made_info_data(['15707596'])
 # print(generate_email_text(data=data,lot_nums=['1']))
 
